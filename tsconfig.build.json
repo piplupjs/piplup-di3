@@ -6,7 +6,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "noEmit": false,
-    "incremental": true
+    "incremental": false
   },
   "include": ["src/**/*"],
   "exclude": ["**/*.test.ts", "test/**/*", "e2e/**/*"]

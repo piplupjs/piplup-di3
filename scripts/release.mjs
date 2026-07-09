@@ -238,7 +238,7 @@ const publish = (dryRun) => {
     return;
   }
 
-  exec('npm', ['publish'], {
+  exec('npm', ['publish', '--access', 'publish'], {
     cwd: config.distDirectory
   });
 };
