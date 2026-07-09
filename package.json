@@ -2,7 +2,7 @@
   "name": "di3",
   "version": "0.1.0",
   "private": "true",
-  "description": "A lightweight dependency injection (DI) library built on the ECMAScript Stage 3 decorators proposal.",
+  "description": "A simple & lightweight, type-safe dependency injection (DI) library, built on the ECMAScript Stage 3 decorators proposal.",
   "keywords": [
     "3",
     "DI",
