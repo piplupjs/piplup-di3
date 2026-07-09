@@ -1,4 +1,4 @@
-# di3
+# @piplup/di3
 
 A simple & lightweight, type-safe dependency injection (DI) library, built on the ECMAScript Stage 3 decorators proposal.
 
@@ -14,27 +14,27 @@ A simple & lightweight, type-safe dependency injection (DI) library, built on th
 
 Traditional DI libraries in the TypeScript ecosystem (such as InversifyJS or TypeDI) rely heavily on legacy experimental decorators (`experimentalDecorators` and `emitDecoratorMetadata`). These legacy decorators require compiler-specific hacks, generate verbose transpiled code, and rely on heavy metadata reflection APIs (`reflect-metadata`), which have not advanced to standard ECMAScript.
 
-`di3` is designed for the modern JavaScript/TypeScript era. By utilizing **ECMAScript Stage 3 decorators** (specifically class accessors), `di3` achieves:
+`@piplup/di3` is designed for the modern JavaScript/TypeScript era. By utilizing **ECMAScript Stage 3 decorators** (specifically class accessors), `@piplup/di3` achieves:
 
 1. **Standards Compliance**: Runs natively on modern runtimes and bundlers without proprietary reflection libraries.
 2. **Runtime Assurances**: Employs accessor `get`/`set`/`init` hooks to block mutability and enforce dependency boundaries at runtime, rather than relying solely on compile-time TypeScript annotations.
 
 ## Installation
 
-Install `di3` using your preferred package manager:
+Install `@piplup/di3` using your preferred package manager:
 
 ```bash
 # pnpm
-pnpm add di3
+pnpm add @piplup/di3
 
 # npm
-npm install di3
+npm install @piplup/di3
 
 # yarn
-yarn add di3
+yarn add @piplup/di3
 
 # bun
-bun add di3
+bun add @piplup/di3
 ```
 
 ## Requirements
@@ -47,7 +47,7 @@ bun add di3
 Below is a minimal working example showing how to declare, inject, and resolve dependencies.
 
 ```typescript
-import { container, Inject } from 'di3';
+import { container, Inject } from '@piplup/di3';
 
 // 1. Define a dependency
 class Logger {
@@ -190,7 +190,7 @@ Safely retrieves the class constructor name from an object instance.
 Factory providers are useful for injecting configured values or dynamic objects:
 
 ```typescript
-import { container, Inject } from 'di3';
+import { container, Inject } from '@piplup/di3';
 
 const ConfigProvider = {
   useFactory: () => ({
@@ -213,7 +213,7 @@ console.log(client.config.baseUrl);
 To prevent infinite loops with circular dependencies, break the instantiation cycle using lazy factory providers:
 
 ```typescript
-import { container, Inject } from 'di3';
+import { container, Inject } from '@piplup/di3';
 
 class ServiceA {
   @Inject({ useFactory: () => container.get(ServiceB) })
