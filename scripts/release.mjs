@@ -152,7 +152,7 @@ const build = (dryRun) => {
     return;
   }
 
-  exec('pnpm', ['build'], {
+  exec('node', ['scripts/build.mjs'], {
     cwd: config.workspaceRoot
   });
 };
