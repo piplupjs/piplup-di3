@@ -9,4 +9,4 @@ dist
 *.swp
 
 # Typescript
-.tsbuildinfo
+tsconfig.build.tsbuildinfo
