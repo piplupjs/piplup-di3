@@ -1,0 +1,12 @@
+node_modules/
+
+# Output
+dist
+
+# Editor
+.DS_Store
+.idea/
+*.swp
+
+# Typescript
+.tsbuildinfo

@@ -1,0 +1,58 @@
+{
+  "name": "di3",
+  "version": "0.1.0",
+  "private": "true",
+  "description": "A lightweight dependency injection (DI) library built on the ECMAScript Stage 3 decorators proposal.",
+  "keywords": [
+    "3",
+    "DI",
+    "Depedency",
+    "Injection",
+    "decorators",
+    "stage",
+    "typescript"
+  ],
+  "homepage": "https://github.com/sadik-malik/di3#readme",
+  "bugs": {
+    "url": "https://github.com/sadik-malik/di3/issues"
+  },
+  "license": "Apache-2.0",
+  "author": "Sadik Malik",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sadik-malik/di3.git"
+  },
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "cleanup": "node ./scripts/cleanup.mjs",
+    "format": "oxfmt . --check",
+    "format:fix": "oxfmt .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "build": "node ./scripts/build.mjs",
+    "typecheck": "tsc",
+    "release": "node ./scripts/release.mjs",
+    "release:dry": "node ./scripts/release.mjs --dry-run",
+    "test": "tsc --noEmit false && vitest run dist/src/ dist/e2e/"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.0",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@types/node": "^26.1.1",
+    "cli-table3": "^0.6.5",
+    "esbuild": "^0.28.1",
+    "fast-glob": "^3.3.3",
+    "filesize": "^11.0.19",
+    "gzip-size": "^7.0.0",
+    "lefthook": "^2.1.9",
+    "oxfmt": "^0.57.0",
+    "oxlint": "^1.72.0",
+    "rimraf": "^6.1.3",
+    "semver": "^7.6.3",
+    "ts-node": "^10.9.2",
+    "typescript": "7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "packageManager": "pnpm@11.9.0"
+}
