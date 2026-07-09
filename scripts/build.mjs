@@ -201,6 +201,7 @@ const build = async () => {
     }
   };
 
+  delete distPackage.private;
   delete distPackage.scripts;
   delete distPackage.devDependencies;
   delete distPackage.packageManager;
