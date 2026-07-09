@@ -255,7 +255,7 @@ const publish = (dryRun) => {
  */
 const releaseGit = (version, remote, message, dryRun) => {
   const tag = `v${version}`;
-  const commitMessage = message ?? `release: ${version}`;
+  const commitMessage = message ?? `chore(release): ${version}`;
 
   if (dryRun) {
     console.log(`[dry-run] git commit + tag ${tag}`);
