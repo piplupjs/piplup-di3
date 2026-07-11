@@ -1,23 +1,18 @@
 # @piplup/di3
 
-A simple & lightweight, type-safe dependency injection (DI) library, built on the ECMAScript Stage 3 decorators proposal.
+A simple, lightweight, and type-safe dependency injection (DI) library for TypeScript and JavaScript, built on the standard ECMAScript Stage 3 decorators proposal.
 
 ## Features
 
 - **Stage 3 Decorators**: Leverages native JavaScript/TypeScript class accessor decorators (no legacy `experimentalDecorators` or `emitDecoratorMetadata` required). Read more on the [TC39 Decorators Proposal](https://github.com/tc39/proposal-decorators).
-- **Immutability & Safety**: Enforces read-only properties at runtime to prevent accidental reassignments and invalid default initializations.
+- **Multiple Provider Types**: Supports Class Providers (`useClass`), Factory Providers (`useFactory`), and Value Providers (`useValue`).
+- **Flexible Injection Tokens**: Use class constructors, symbols, or strings as injection tokens.
 - **Lazy Resolution**: Dependencies are resolved from the container only upon first property access.
-- **Circular Dependency Support**: Handles circular references gracefully using factory providers.
-- **Zero-Dependency & Tiny Footprint**: Extremely lightweight codebase with zero external runtime dependencies.
+- **Circular Dependency Detection**: Detects circular dependencies at runtime and throws clear errors.
+- **Explicit Registrations**: Avoids magic resolutions by requiring explicit provider registrations.
+- **Container Lifecycle Management**: Easily freeze registrations, clear instance caches, or dispose of instances (supporting resource clean-up via `Symbol.dispose` or `dispose()`).
 
-## Why this project?
-
-Traditional DI libraries in the TypeScript ecosystem (such as InversifyJS or TypeDI) rely heavily on legacy experimental decorators (`experimentalDecorators` and `emitDecoratorMetadata`). These legacy decorators require compiler-specific hacks, generate verbose transpiled code, and rely on heavy metadata reflection APIs (`reflect-metadata`), which have not advanced to standard ECMAScript.
-
-`@piplup/di3` is designed for the modern JavaScript/TypeScript era. By utilizing **ECMAScript Stage 3 decorators** (specifically class accessors), `@piplup/di3` achieves:
-
-1. **Standards Compliance**: Runs natively on modern runtimes and bundlers without proprietary reflection libraries.
-2. **Runtime Assurances**: Employs accessor `get`/`set`/`init` hooks to block mutability and enforce dependency boundaries at runtime, rather than relying solely on compile-time TypeScript annotations.
+---
 
 ## Installation
 
@@ -37,27 +32,31 @@ yarn add @piplup/di3
 bun add @piplup/di3
 ```
 
+---
+
 ## Requirements
 
 - **Node.js**: `>= 18.0.0`
-- **TypeScript**: `>= 5.0.0` (for Stage 3 decorator support)
+- **TypeScript**: `>= 5.0.0` (configured with standard Stage 3 decorators)
+
+---
 
 ## Quick Start
 
-Below is a minimal working example showing how to declare, inject, and resolve dependencies.
+Below is a minimal working example showing how to register, inject, and resolve dependencies:
 
 ```typescript
 import { container, Inject } from '@piplup/di3';
 
-// 1. Define a dependency
+// 1. Define classes and injection tokens
 class Logger {
   log(message: string) {
     console.log(`[LOG]: ${message}`);
   }
 }
 
-// 2. Inject dependency using the @Inject decorator on an accessor
 class UserService {
+  // Inject dependency using the @Inject decorator on an accessor
   @Inject(Logger)
   accessor logger!: Logger;
 
@@ -66,188 +65,178 @@ class UserService {
   }
 }
 
-// 3. Resolve the entry point class from the container
+// 2. Register providers in the container
+container.register(Logger, { useClass: Logger });
+container.register(UserService, { useClass: UserService });
+
+// 3. Resolve and use
 const userService = container.get(UserService);
 userService.greet('World'); // Logs: [LOG]: Hello, World!
 ```
 
+---
+
 ## Core Concepts
 
-`di3` centers around three primary architectural components:
+### 1. The Container
 
-1. **The Container**: A centralized registry that lazily resolves and caches singleton instances. When `container.get(token)` is invoked, it checks if an instance exists for the given token. If missing, it creates the instance (or runs the factory) and caches it.
-2. **The `@Inject` Decorator**: Applied specifically to class `accessor` properties. Accessor decorators generate native getter and setter hooks.
-   - **`get`**: Queries the container dynamically and caches the reference upon first access.
-   - **`set`**: Intercepts reassignment and throws a runtime violation error to preserve immutability.
-   - **`init`**: Restricts default value initialization on the accessor to prevent bypassing the DI container.
-3. **Injection Tokens**: Identifiers used for dependency lookup. A token is either a class constructor or a factory provider.
+A central registry (`Container`) mapping `InjectionToken`s to `Provider` configurations. It maintains a singleton instance cache of all resolved dependencies.
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Instance
-    participant Decorator (Accessor)
-    participant Container
+- **Registration**: Explicitly map a token to a provider.
+- **Resolution**: Retrieve a cached singleton instance via `container.get(token)`.
+- **Freezing**: Prevent further registrations once bootstrapping is finished using `container.freeze()`.
+- **Disposal**: Clear all registrations and invoke clean-up routines on active instances using `container.dispose()`.
 
-    Client->>Container: get(UserService)
-    Container->>Instance: new UserService()
-    Note over Instance: Class initialized with @Inject accessor
-    Client->>Instance: service.logger (Access property)
-    Instance->>Decorator (Accessor): get()
-    Decorator (Accessor)->>Container: get(Logger)
-    alt Logger in cache
-        Container-->>Decorator (Accessor): cached Logger instance
-    else Logger not in cache
-        Container->>Container: Create Logger instance
-        Container-->>Decorator (Accessor): new Logger instance
-    end
-    Decorator (Accessor)-->>Client: Logger instance
-```
+### 2. `@Inject(token)` Decorator
 
-## API
+Applied exclusively to class `accessor` properties. Under the hood, standard Stage 3 accessor decorators manage the target's lifecycle:
 
-### `container`
+- **`get`**: Lazily resolves the dependency from the container and caches it upon first access.
+- **`set`**: Prevents runtime reassignments by throwing a `TypeError`.
+- **`init`**: Restricts default value initialization on the accessor to prevent bypassing the DI container.
 
-The global singleton instance of the dependency injection `Container`.
+### 3. Providers
 
-#### `container.get<T>(token: InjectionToken<T>): T`
+`di3` supports three types of providers:
 
-Resolves the injection token to its cached singleton instance.
-
-- **Parameters**:
-  - `token`: `InjectionToken<T>` — A class constructor or a factory provider object.
-- **Returns**: `T` — The resolved singleton instance.
-- **Throws**: An `Error` if the token is unsupported (neither a class constructor nor a factory provider object).
-
-```typescript
-const db = container.get(DatabaseConnection);
-```
+- **Class Provider**: Creates a new instance using the class constructor.
+- **Factory Provider**: Executes a factory function to return a resolved value/instance.
+- **Value Provider**: Directly injects a static value or pre-created instance.
 
 ---
 
-### `@Inject(token)`
+## API Reference
 
-A decorator used to inject dependencies into class accessor properties.
+### `Container` Methods
 
-- **Parameters**:
-  - `token`: `InjectionToken<T>` — The class constructor or factory provider to resolve.
-- **Returns**: `ClassAccessorDecoratorResult` — The decorator descriptor targeting the accessor.
-- **Throws**: An `Error` at runtime if applied to non-accessor properties (e.g. standard fields, methods), if the property is reassigned, or if it is initialized with a default value.
+#### `container.register<T>(token, provider, options?)`
 
-```typescript
-class HttpController {
-  @Inject(ApiService)
-  accessor api!: ApiService;
-}
-```
+Registers a provider for the specified injection token.
+
+- **Arguments**:
+  - `token`: `InjectionToken<T>` (`Constructor<T> | symbol | string`)
+  - `provider`: `Provider<T>` (one of `ClassProvider`, `FactoryProvider`, or `ValueProvider`)
+  - `options?`: `RegisterOptions` (e.g. `{ override: true }` to override existing registration)
+- **Throws**:
+  - `FrozenContainerError`: If the container has been frozen.
+  - `DuplicateProviderError`: If the token is already registered (unless `{ override: true }` is provided).
+  - `InvalidProviderError`: If the provider shape is invalid.
+
+#### `container.get<T>(token)`
+
+Resolves the token and returns its cached singleton instance.
+
+- **Arguments**:
+  - `token`: `InjectionToken<T>`
+- **Throws**:
+  - `ProviderNotFoundError`: If no provider is registered for the token.
+  - `CircularDependencyError`: If a circular dependency loop is detected during resolution.
+
+#### `container.freeze()`
+
+Freezes the container, preventing any further registrations.
+
+#### `container.clear()`
+
+Clears the singleton instances cache, forcing re-resolution on subsequent accesses.
+
+#### `container.dispose()`
+
+Disposes of all resolved singletons, clearing the cache and registrations, and resetting the frozen state. It calls `Symbol.dispose` or `dispose()` on any cached singleton that implements them.
 
 ---
 
-### Types
+### `@Inject(token)` Decorator
 
-#### `Constructor<T>`
+Annotates a class `accessor` property.
 
-Represents a class constructor function.
+- **Arguments**:
+  - `token`: `InjectionToken<T>`
+- **Throws**:
+  - `TypeError`: At runtime if applied to a non-accessor property (fields, methods), to a private accessor, or if initialized with a default value.
+
+---
+
+### Type Definitions
 
 ```typescript
 type Constructor<T = any> = new (...args: any[]) => T;
-```
 
-#### `FactoryProvider<T>`
+type InjectionToken<T = unknown> = Constructor<T> | symbol | string;
 
-Defines a provider object that uses a custom factory function to resolve the dependency.
-
-```typescript
-type FactoryProvider<T = any> = {
-  useFactory: () => T;
+type ClassProvider<T = unknown> = {
+  useClass: Constructor<T>;
 };
-```
 
-#### `InjectionToken<T>`
+type FactoryProvider<T = unknown> = {
+  useFactory(): T;
+};
 
-Union type of valid tokens accepted by the container.
+type ValueProvider<T = unknown> = {
+  useValue: T;
+};
 
-```typescript
-type InjectionToken<T = any> = Constructor<T> | FactoryProvider<T>;
+type Provider<T = unknown> = ClassProvider<T> | FactoryProvider<T> | ValueProvider<T>;
 ```
 
 ---
 
-### Utilities
+## Advanced Usage
 
-#### `isClass(v: any): v is Constructor`
+### Using Factory and Value Providers
 
-Identifies if a value is a class constructor, with support for transpiled ES5 classes and native ES6 classes.
-
-#### `getClassName(instance: object): string`
-
-Safely retrieves the class constructor name from an object instance.
-
-## Examples
-
-### Using Factory Providers
-
-Factory providers are useful for injecting configured values or dynamic objects:
+You can register configuration settings or third-party client instances:
 
 ```typescript
 import { container, Inject } from '@piplup/di3';
 
-const ConfigProvider = {
-  useFactory: () => ({
-    baseUrl: process.env.API_BASE_URL || 'https://api.example.dev',
-    timeout: 5000
-  })
-};
+const API_URL_TOKEN = Symbol('ApiUrl');
 
-class Client {
-  @Inject(ConfigProvider)
-  accessor config!: { baseUrl: string; timeout: number };
+// Value Provider
+container.register(API_URL_TOKEN, { useValue: 'https://api.example.com' });
+
+class ApiClient {
+  @Inject(API_URL_TOKEN)
+  accessor apiUrl!: string;
+
+  fetchData() {
+    return fetch(`${this.apiUrl}/data`);
+  }
 }
 
-const client = container.get(Client);
-console.log(client.config.baseUrl);
+// Class Provider
+container.register(ApiClient, { useClass: ApiClient });
 ```
 
-### Lazy Circular Dependency Resolution
+### Resource Clean-up (Explicit Resource Management)
 
-To prevent infinite loops with circular dependencies, break the instantiation cycle using lazy factory providers:
+If a cached singleton implements `Symbol.dispose` or a `dispose()` method, `container.dispose()` will automatically call it:
 
 ```typescript
-import { container, Inject } from '@piplup/di3';
-
-class ServiceA {
-  @Inject({ useFactory: () => container.get(ServiceB) })
-  accessor b!: ServiceB;
+class DatabaseConnection {
+  [Symbol.dispose]() {
+    console.log('Database connection closed.');
+  }
 }
 
-class ServiceB {
-  @Inject({ useFactory: () => container.get(ServiceA) })
-  accessor a!: ServiceA;
-}
+container.register(DatabaseConnection, { useClass: DatabaseConnection });
+container.get(DatabaseConnection); // Instantiates and caches connection
 
-const a = container.get(ServiceA);
-const b = container.get(ServiceB);
-
-console.log(a.b === b); // true
-console.log(b.a === a); // true
+container.dispose(); // Logs: "Database connection closed."
 ```
 
-## Design Decisions
+---
 
-- **Why Accessors?**: Standard TypeScript/JavaScript fields decorated with Stage 3 decorators execute their decorator logic during class instantiation, but cannot easily intercept property access on the prototype without replacing the entire object layout. By enforcing class `accessor` properties, `di3` utilizes native getters/setters, allowing dependency lookup to remain fully lazy and preventing post-initialization mutations.
-- **Strict Immutability**: Allowing injected properties to be mutated or initialized with defaults leads to fragile dependency states. The library throws runtime errors if reassignment (`set`) or custom initialization (`init`) is attempted on injected properties.
-- **Global Registry**: To minimize configuration boilerplate, `di3` exports a single pre-configured `container` singleton. This avoids the overhead of manual container propagation across layers of code.
+## TypeScript Configuration
 
-## TypeScript Support
+`di3` requires TypeScript `5.0+` for Stage 3 decorators support.
 
-`di3` requires TypeScript version `5.0` or higher to support ECMAScript Stage 3 decorators.
-
-Ensure that `experimentalDecorators` is either **omitted or set to `false`** in your `tsconfig.json`, as standard decorators will not run correctly under the legacy decorator compiler flag:
+Ensure `experimentalDecorators` is omitted or set to `false` in your `tsconfig.json` to prevent compiling using legacy decorators:
 
 ```json
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "experimentalDecorators": false
@@ -255,59 +244,35 @@ Ensure that `experimentalDecorators` is either **omitted or set to `false`** in 
 }
 ```
 
-Decorated properties must be declared using the `accessor` keyword and the definite assignment assertion operator (`!`):
+Properties must use the `accessor` keyword:
 
 ```typescript
 @Inject(MyService)
 accessor service!: MyService;
 ```
 
-## Best Practices
+---
 
-- **Use Class Constructors as Tokens**: Whenever possible, use class constructors directly as their own tokens. This eliminates the need to maintain separate token registries or string keys.
-- **Always Declare as Definite Assignment**: Because properties are initialized lazily at runtime, use the `!` postfix operator to satisfy TypeScript compiler null/undefined checks.
-- **Avoid Factory Side Effects**: Keep factory functions inside `useFactory` pure and side-effect free to avoid unexpected instantiation behavior.
+## Testing & Contributing
 
-## Limitations
+### Run Tests
 
-- **Accessor Restriction**: `@Inject` can only decorate properties declared with the `accessor` keyword. Standard fields, methods, or parameters are intentionally left out.
-- **Singleton Cache Only**: The container registers all resolved dependencies as singletons. There is no transient or request-scope support out of the box.
-- **Single Global Container**: There is no built-in support for hierarchical container resolution or multiple isolated containers.
-
-## FAQ
-
-#### Why am I getting compilation errors when using `@Inject`?
-
-Ensure your `tsconfig.json` targets `ES2022` or newer and that `experimentalDecorators` is disabled. Standard Stage 3 decorators require the `accessor` keyword before the property name.
-
-#### Can I assign a default value to an injected property?
-
-No. Initializing a property like `@Inject(Dep) accessor dep = new Dep()` throws a runtime error. Injected properties must be resolved entirely through the DI container.
-
-## Contributing
-
-1. Clone the repository.
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-3. Run test suites to verify your changes:
-   ```bash
-   pnpm test
-   ```
-4. Verify code formatting and linting:
-   ```bash
-   pnpm lint
-   pnpm format
-   ```
-
-## Testing
-
-Tests are written using Vitest. To run all unit and integration tests:
+Tests are written with Vitest. Run all unit and E2E tests:
 
 ```bash
 pnpm test
 ```
+
+### Code Style & Linting
+
+Check code quality and format rules:
+
+```bash
+pnpm lint
+pnpm format
+```
+
+---
 
 ## License
 

@@ -37,7 +37,7 @@
     "typecheck": "tsc",
     "release": "node ./scripts/release.mjs",
     "release:dry": "node ./scripts/release.mjs --dry-run",
-    "test": "tsc --noEmit false && vitest run dist/src/ dist/e2e/"
+    "test": "tsc --target es2022 --lib esnext --noEmit false && vitest run dist/src/ dist/e2e/"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.0",
