@@ -1,6 +1,6 @@
 export type Constructor<T = any> = new (...args: any[]) => T;
 
-export type InjectionToken<T = unknown> = Constructor<T> | symbol | string;
+export type InjectionToken<T = unknown> = Constructor<T> | string | symbol;
 
 export type ClassProvider<T = unknown> = {
   useClass: Constructor<T>;

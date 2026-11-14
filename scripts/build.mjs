@@ -4,10 +4,10 @@
 
 import { promises as fs } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
-import esbuild from 'esbuild';
 
-import fg from 'fast-glob';
 import Table from 'cli-table3';
+import esbuild from 'esbuild';
+import fg from 'fast-glob';
 import { filesize } from 'filesize';
 import { gzipSize } from 'gzip-size';
 
@@ -33,17 +33,17 @@ const workspaceRoot = getWorkspaceRoot();
 
 /** @type {BuildConfig} */
 const config = {
-  workspaceRoot,
   get distDirectory() {
     return join(this.workspaceRoot, 'dist');
+  },
+  distEntryFileName: 'index',
+  get distPackageJson() {
+    return join(this.distDirectory, 'package.json');
   },
   get workspacePackageJson() {
     return join(this.workspaceRoot, 'package.json');
   },
-  get distPackageJson() {
-    return join(this.distDirectory, 'package.json');
-  },
-  distEntryFileName: 'index',
+  workspaceRoot,
 };
 
 /**
@@ -68,8 +68,8 @@ const runCleanup = async () => {
  */
 const getBuildStats = async () => {
   const files = await fg(['**/*.js', '**/*.d.ts', '**/*.json', 'LICENSE', 'README.md'], {
-    cwd: config.distDirectory,
     absolute: true,
+    cwd: config.distDirectory,
     onlyFiles: true,
   });
 
@@ -88,16 +88,16 @@ const getBuildStats = async () => {
 
       return {
         file: relative(config.distDirectory, file),
-        size: filesize(size),
         gzip: filesize(gzip),
+        size: filesize(size),
       };
     }),
   );
 
   return {
     files: stats.sort((a, b) => a.file.localeCompare(b.file)),
-    total,
     gzipTotal,
+    total,
   };
 };
 
@@ -129,28 +129,28 @@ const build = async () => {
   await runCleanup();
 
   const entryPoints = await fg(['src/**/*.ts'], {
+    absolute: true,
     cwd: config.workspaceRoot,
     ignore: ['**/*.test.ts'],
-    absolute: true,
   });
 
   // Compile ESM
   await esbuild.build({
     entryPoints,
-    platform: 'node',
     format: 'esm',
-    outdir: config.distDirectory,
     outbase: 'src',
+    outdir: config.distDirectory,
+    platform: 'node',
     target: 'node16',
   });
 
   // Compile CJS
   await esbuild.build({
     entryPoints,
-    platform: 'node',
     format: 'cjs',
-    outdir: join(config.distDirectory, 'cjs'),
     outbase: 'src',
+    outdir: join(config.distDirectory, 'cjs'),
+    platform: 'node',
     target: 'node16',
   });
 
@@ -161,8 +161,8 @@ const build = async () => {
 
   // Copy type declarations to CJS directory
   const dtsFiles = await fg(['**/*.d.ts'], {
-    cwd: config.distDirectory,
     absolute: true,
+    cwd: config.distDirectory,
   });
   await Promise.all(
     dtsFiles.map(async (file) => {
@@ -178,7 +178,7 @@ const build = async () => {
   await fs.mkdir(cjsDirectory, { recursive: true });
   await fs.writeFile(
     join(cjsDirectory, 'package.json'),
-    JSON.stringify({ type: 'commonjs' }, null, 2) + '\n',
+    `${JSON.stringify({ type: 'commonjs' }, null, 2)}\n`,
     'utf8',
   );
 
@@ -191,12 +191,12 @@ const build = async () => {
   distPackage.exports = {
     '.': {
       import: {
-        types: `./${config.distEntryFileName}.d.ts`,
         default: `./${config.distEntryFileName}.js`,
+        types: `./${config.distEntryFileName}.d.ts`,
       },
       require: {
-        types: `./cjs/${config.distEntryFileName}.d.ts`,
         default: `./cjs/${config.distEntryFileName}.js`,
+        types: `./cjs/${config.distEntryFileName}.d.ts`,
       },
     },
   };

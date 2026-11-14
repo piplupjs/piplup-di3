@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { container, Inject } from '../src/index.js';
 
 describe('Dependency Injection E2E Flow', () => {
@@ -32,9 +33,9 @@ describe('Dependency Injection E2E Flow', () => {
 
       getUser(id: string) {
         return {
+          dbInfo: this.db.query(`SELECT * FROM users WHERE id = ${id}`),
           id,
           name: 'John Doe',
-          dbInfo: this.db.query(`SELECT * FROM users WHERE id = ${id}`),
           portUsed: this.config.port,
         };
       }
@@ -76,9 +77,9 @@ describe('Dependency Injection E2E Flow', () => {
 
     const userDetails = userService.getUserDetails('42');
     expect(userDetails).toEqual({
+      dbInfo: 'Result of "SELECT * FROM users WHERE id = 42" from mongodb://localhost:27017/prod',
       id: '42',
       name: 'John Doe',
-      dbInfo: 'Result of "SELECT * FROM users WHERE id = 42" from mongodb://localhost:27017/prod',
       portUsed: 8080,
     });
 

@@ -1,5 +1,4 @@
 export { container } from './container.js';
-export { Inject } from './inject.js';
 export {
   CircularDependencyError,
   DuplicateProviderError,
@@ -7,11 +6,12 @@ export {
   InvalidProviderError,
   ProviderNotFoundError,
 } from './errors.js';
+export { Inject } from './inject.js';
 export type {
+  ClassProvider,
   Constructor,
   FactoryProvider,
   InjectionToken,
-  ClassProvider,
   Provider,
   ValueProvider,
 } from './types.js';

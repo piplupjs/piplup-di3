@@ -1,4 +1,4 @@
-import { InjectionToken } from './types.js';
+import type { InjectionToken } from './types.js';
 
 export class ProviderNotFoundError extends Error {
   constructor(token: InjectionToken) {

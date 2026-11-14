@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Inject } from './inject.js';
+
 import { container } from './container.js';
+import { Inject } from './inject.js';
 
 describe('@Inject decorator', () => {
   beforeEach(() => {
@@ -92,16 +93,13 @@ describe('@Inject decorator', () => {
     expect(result).toBeDefined();
 
     // Test the init hook of the decorator result
-    if (result && typeof result === 'object' && 'init' in result) {
-      expect(() => result.init!('default_value' as any)).toThrow(TypeError);
-      expect(() => result.init!('default_value' as any)).toThrow(
-        'Injected dependency "prop" cannot have a default value.',
-      );
+    expect(result).toHaveProperty('init', expect.any(Function));
+    expect(() => result.init!('default_value' as any)).toThrow(TypeError);
+    expect(() => result.init!('default_value' as any)).toThrow(
+      'Injected dependency "prop" cannot have a default value.',
+    );
 
-      // Should succeed with undefined
-      expect(result.init!(undefined)).toBeUndefined();
-    } else {
-      expect.fail('Decorator did not return accessor descriptor containing init method.');
-    }
+    // Should succeed with undefined
+    expect(result.init!(undefined)).toBeUndefined();
   });
 });

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { Container } from './container.js';
 import {
   CircularDependencyError,
@@ -79,7 +80,12 @@ describe('Container', () => {
   describe('clear', () => {
     it('should clear cached instances but keep registrations', () => {
       let factoryCalls = 0;
-      container.register('token', { useFactory: () => ++factoryCalls });
+      container.register('token', {
+        useFactory: () => {
+          factoryCalls += 1;
+          return factoryCalls;
+        },
+      });
 
       expect(container.get('token')).toBe(1);
       expect(container.get('token')).toBe(1); // Cached

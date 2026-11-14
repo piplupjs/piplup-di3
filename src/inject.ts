@@ -1,4 +1,5 @@
 import { container } from './container.js';
+
 import type { InjectionToken } from './types.js';
 
 /**
@@ -12,7 +13,7 @@ import type { InjectionToken } from './types.js';
  * }
  */
 export function Inject<T>(token: InjectionToken<T>) {
-  return function (
+  return function injectDecorator(
     _target: ClassAccessorDecoratorTarget<any, T>,
     context: ClassAccessorDecoratorContext<any, T>,
   ): ClassAccessorDecoratorResult<any, T> {
@@ -29,10 +30,6 @@ export function Inject<T>(token: InjectionToken<T>) {
         return container.get(token);
       },
 
-      set() {
-        throw new TypeError(`Cannot assign to injected dependency "${String(context.name)}".`);
-      },
-
       init(initialValue) {
         if (initialValue !== undefined) {
           throw new TypeError(
@@ -41,6 +38,10 @@ export function Inject<T>(token: InjectionToken<T>) {
         }
 
         return initialValue;
+      },
+
+      set() {
+        throw new TypeError(`Cannot assign to injected dependency "${String(context.name)}".`);
       },
     };
   };

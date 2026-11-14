@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
+
 import { isClassProvider, isFactoryProvider, isValueProvider } from './utils.js';
+
 import type { Provider } from './types.js';
 
 describe('utils', () => {
