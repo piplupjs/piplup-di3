@@ -45,62 +45,9 @@ const workspaceRoot = getWorkspaceRoot();
 
 /** @type {ReleaseConfig} */
 const config = {
-  workspaceRoot,
   distDirectory: join(workspaceRoot, 'dist'),
-  distPackageJson: join(workspaceRoot, 'dist', 'package.json')
-};
-
-/**
- * Parses CLI arguments.
- *
- * @param {string[]} argv - Process arguments.
- *
- * @returns {ReleaseOptions}
- */
-const parseArgs = (argv) => {
-  /** @type {ReleaseOptions} */
-  const options = {
-    bump: 'patch',
-    dryRun: false,
-    ci: false,
-    message: null,
-    remote: 'origin'
-  };
-
-  for (let index = 0; index < argv.length; index++) {
-    const arg = argv[index];
-
-    switch (arg) {
-      case '--dry-run':
-        options.dryRun = true;
-        break;
-
-      case '--ci':
-        options.ci = true;
-        break;
-
-      case '--message':
-        options.message = argv[++index] ?? null;
-        break;
-
-      case '--remote':
-        options.remote = argv[++index] ?? 'origin';
-        break;
-
-      case '--help':
-        printHelp();
-        process.exit(0);
-
-      default:
-        if (arg.startsWith('--')) {
-          throw new Error(`Unknown flag: ${arg}`);
-        }
-
-        options.bump = /** @type {BumpType} */ (arg);
-    }
-  }
-
-  return options;
+  distPackageJson: join(workspaceRoot, 'dist', 'package.json'),
+  workspaceRoot,
 };
 
 /**
@@ -123,6 +70,62 @@ Flags:
 };
 
 /**
+ * Parses CLI arguments.
+ *
+ * @param {string[]} argv - Process arguments.
+ *
+ * @returns {ReleaseOptions}
+ */
+const parseArgs = (argv) => {
+  /** @type {ReleaseOptions} */
+  const options = {
+    bump: 'patch',
+    ci: false,
+    dryRun: false,
+    message: null,
+    remote: 'origin',
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+
+    switch (arg) {
+      case '--dry-run':
+        options.dryRun = true;
+        break;
+
+      case '--ci':
+        options.ci = true;
+        break;
+
+      case '--message':
+        index += 1;
+        options.message = argv[index] ?? null;
+        break;
+
+      case '--remote':
+        index += 1;
+        options.remote = argv[index] ?? 'origin';
+        break;
+
+      case '--help':
+        printHelp();
+        process.exit(0);
+        break;
+
+      default:
+        if (arg.startsWith('--')) {
+          throw new Error(`Unknown flag: ${arg}`);
+        }
+
+        options.bump = /** @type {BumpType} */ (arg);
+    }
+  }
+
+  return options;
+};
+
+/**
  * Ensures git working tree is clean.
  *
  * @param {boolean} dryRun
@@ -130,7 +133,9 @@ Flags:
  * @returns {void}
  */
 const assertCleanGitTree = (dryRun) => {
-  if (dryRun) return;
+  if (dryRun) {
+    return;
+  }
 
   const { stdout } = exec('git', ['status', '--porcelain'], { silent: true });
 
@@ -153,7 +158,7 @@ const build = (dryRun) => {
   }
 
   exec('node', ['scripts/build.mjs'], {
-    cwd: config.workspaceRoot
+    cwd: config.workspaceRoot,
   });
 };
 
@@ -177,12 +182,12 @@ const bumpVersion = async (type, dryRun) => {
 
   const [major, minor, patch] = parts;
 
-  const next =
-    type === 'major'
-      ? `${major + 1}.0.0`
-      : type === 'minor'
-        ? `${major}.${minor + 1}.0`
-        : `${major}.${minor}.${patch + 1}`;
+  let next = `${major}.${minor}.${patch + 1}`;
+  if (type === 'major') {
+    next = `${major + 1}.0.0`;
+  } else if (type === 'minor') {
+    next = `${major}.${minor + 1}.0`;
+  }
 
   if (dryRun) {
     console.log(`[dry-run] version ${pkg.version} → ${next}`);
@@ -239,7 +244,7 @@ const publish = (dryRun) => {
   }
 
   exec('npm', ['publish', '--access', 'public'], {
-    cwd: config.distDirectory
+    cwd: config.distDirectory,
   });
 };
 

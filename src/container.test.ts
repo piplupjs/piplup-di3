@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { Container } from './container.js';
 import {
   CircularDependencyError,
   DuplicateProviderError,
   FrozenContainerError,
   InvalidProviderError,
-  ProviderNotFoundError
+  ProviderNotFoundError,
 } from './errors.js';
 
 describe('Container', () => {
@@ -79,7 +80,12 @@ describe('Container', () => {
   describe('clear', () => {
     it('should clear cached instances but keep registrations', () => {
       let factoryCalls = 0;
-      container.register('token', { useFactory: () => ++factoryCalls });
+      container.register('token', {
+        useFactory: () => {
+          factoryCalls += 1;
+          return factoryCalls;
+        },
+      });
 
       expect(container.get('token')).toBe(1);
       expect(container.get('token')).toBe(1); // Cached
@@ -96,12 +102,12 @@ describe('Container', () => {
       container.register('A', {
         useFactory: () => {
           return container.get('B');
-        }
+        },
       });
       container.register('B', {
         useFactory: () => {
           return container.get('A');
-        }
+        },
       });
 
       expect(() => container.get('A')).toThrow(CircularDependencyError);
@@ -112,7 +118,7 @@ describe('Container', () => {
     it('should dispose components with Symbol.dispose', () => {
       const disposeSpy = vi.fn();
       const disposable = {
-        [Symbol.dispose]: disposeSpy
+        [Symbol.dispose]: disposeSpy,
       };
       container.register('disposable', { useValue: disposable });
       container.get('disposable'); // Instantialize/cache
@@ -124,7 +130,7 @@ describe('Container', () => {
     it('should dispose components with dispose() function', () => {
       const disposeSpy = vi.fn();
       const disposable = {
-        dispose: disposeSpy
+        dispose: disposeSpy,
       };
       container.register('disposable', { useValue: disposable });
       container.get('disposable');

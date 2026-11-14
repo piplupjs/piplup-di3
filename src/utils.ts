@@ -1,4 +1,4 @@
-import { ClassProvider, FactoryProvider, Provider, ValueProvider } from './types.js';
+import type { ClassProvider, FactoryProvider, Provider, ValueProvider } from './types.js';
 
 export function isClassProvider<T>(provider: Provider<T>): provider is ClassProvider<T> {
   return 'useClass' in provider;

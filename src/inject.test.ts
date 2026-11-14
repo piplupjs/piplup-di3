@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Inject } from './inject.js';
+
 import { container } from './container.js';
+import { Inject } from './inject.js';
 
 describe('@Inject decorator', () => {
   beforeEach(() => {
@@ -52,12 +53,12 @@ describe('@Inject decorator', () => {
       kind: 'field',
       name: 'prop',
       private: false,
-      static: false
+      static: false,
     } as any;
 
     expect(() => decorator(undefined as any, mockContext)).toThrow(TypeError);
     expect(() => decorator(undefined as any, mockContext)).toThrow(
-      '@Inject can only be applied to accessor properties.'
+      '@Inject can only be applied to accessor properties.',
     );
   });
 
@@ -69,12 +70,12 @@ describe('@Inject decorator', () => {
       kind: 'accessor',
       name: 'prop',
       private: true,
-      static: false
+      static: false,
     } as any;
 
     expect(() => decorator(undefined as any, mockContext)).toThrow(TypeError);
     expect(() => decorator(undefined as any, mockContext)).toThrow(
-      '@Inject cannot be applied to private accessors.'
+      '@Inject cannot be applied to private accessors.',
     );
   });
 
@@ -85,23 +86,20 @@ describe('@Inject decorator', () => {
       kind: 'accessor',
       name: 'prop',
       private: false,
-      static: false
+      static: false,
     } as any;
 
     const result = decorator(undefined as any, mockContext);
     expect(result).toBeDefined();
 
     // Test the init hook of the decorator result
-    if (result && typeof result === 'object' && 'init' in result) {
-      expect(() => result.init!('default_value' as any)).toThrow(TypeError);
-      expect(() => result.init!('default_value' as any)).toThrow(
-        'Injected dependency "prop" cannot have a default value.'
-      );
+    expect(result).toHaveProperty('init', expect.any(Function));
+    expect(() => result.init!('default_value' as any)).toThrow(TypeError);
+    expect(() => result.init!('default_value' as any)).toThrow(
+      'Injected dependency "prop" cannot have a default value.',
+    );
 
-      // Should succeed with undefined
-      expect(result.init!(undefined)).toBeUndefined();
-    } else {
-      expect.fail('Decorator did not return accessor descriptor containing init method.');
-    }
+    // Should succeed with undefined
+    expect(result.init!(undefined)).toBeUndefined();
   });
 });

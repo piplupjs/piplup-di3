@@ -4,10 +4,10 @@
 
 import { promises as fs } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
-import esbuild from 'esbuild';
 
-import fg from 'fast-glob';
 import Table from 'cli-table3';
+import esbuild from 'esbuild';
+import fg from 'fast-glob';
 import { filesize } from 'filesize';
 import { gzipSize } from 'gzip-size';
 
@@ -33,17 +33,17 @@ const workspaceRoot = getWorkspaceRoot();
 
 /** @type {BuildConfig} */
 const config = {
-  workspaceRoot,
   get distDirectory() {
     return join(this.workspaceRoot, 'dist');
+  },
+  distEntryFileName: 'index',
+  get distPackageJson() {
+    return join(this.distDirectory, 'package.json');
   },
   get workspacePackageJson() {
     return join(this.workspaceRoot, 'package.json');
   },
-  get distPackageJson() {
-    return join(this.distDirectory, 'package.json');
-  },
-  distEntryFileName: 'index'
+  workspaceRoot,
 };
 
 /**
@@ -53,7 +53,7 @@ const config = {
  */
 const runCleanup = async () => {
   return exec('pnpm', ['cleanup'], {
-    cwd: config.workspaceRoot
+    cwd: config.workspaceRoot,
   });
 };
 
@@ -68,9 +68,9 @@ const runCleanup = async () => {
  */
 const getBuildStats = async () => {
   const files = await fg(['**/*.js', '**/*.d.ts', '**/*.json', 'LICENSE', 'README.md'], {
-    cwd: config.distDirectory,
     absolute: true,
-    onlyFiles: true
+    cwd: config.distDirectory,
+    onlyFiles: true,
   });
 
   let total = 0;
@@ -88,16 +88,16 @@ const getBuildStats = async () => {
 
       return {
         file: relative(config.distDirectory, file),
+        gzip: filesize(gzip),
         size: filesize(size),
-        gzip: filesize(gzip)
       };
-    })
+    }),
   );
 
   return {
     files: stats.sort((a, b) => a.file.localeCompare(b.file)),
+    gzipTotal,
     total,
-    gzipTotal
   };
 };
 
@@ -110,7 +110,7 @@ const getBuildStats = async () => {
  */
 const createStatsTable = (stats) => {
   const table = new Table({
-    head: ['File', 'Size', 'Gzip']
+    head: ['File', 'Size', 'Gzip'],
   });
 
   for (const item of stats.files) {
@@ -129,40 +129,40 @@ const build = async () => {
   await runCleanup();
 
   const entryPoints = await fg(['src/**/*.ts'], {
+    absolute: true,
     cwd: config.workspaceRoot,
     ignore: ['**/*.test.ts'],
-    absolute: true
   });
 
   // Compile ESM
   await esbuild.build({
     entryPoints,
-    platform: 'node',
     format: 'esm',
-    outdir: config.distDirectory,
     outbase: 'src',
-    target: 'node16'
+    outdir: config.distDirectory,
+    platform: 'node',
+    target: 'node16',
   });
 
   // Compile CJS
   await esbuild.build({
     entryPoints,
-    platform: 'node',
     format: 'cjs',
-    outdir: join(config.distDirectory, 'cjs'),
     outbase: 'src',
-    target: 'node16'
+    outdir: join(config.distDirectory, 'cjs'),
+    platform: 'node',
+    target: 'node16',
   });
 
   // Generate type declarations
   exec('tsc', ['-p', 'tsconfig.build.json'], {
-    cwd: config.workspaceRoot
+    cwd: config.workspaceRoot,
   });
 
   // Copy type declarations to CJS directory
   const dtsFiles = await fg(['**/*.d.ts'], {
+    absolute: true,
     cwd: config.distDirectory,
-    absolute: true
   });
   await Promise.all(
     dtsFiles.map(async (file) => {
@@ -170,7 +170,7 @@ const build = async () => {
       const destPath = join(config.distDirectory, 'cjs', relPath);
       await fs.mkdir(dirname(destPath), { recursive: true });
       await fs.copyFile(file, destPath);
-    })
+    }),
   );
 
   // Create package.json inside dist/cjs/ to specify CommonJS
@@ -178,8 +178,8 @@ const build = async () => {
   await fs.mkdir(cjsDirectory, { recursive: true });
   await fs.writeFile(
     join(cjsDirectory, 'package.json'),
-    JSON.stringify({ type: 'commonjs' }, null, 2) + '\n',
-    'utf8'
+    `${JSON.stringify({ type: 'commonjs' }, null, 2)}\n`,
+    'utf8',
   );
 
   const workspacePackageJson = JSON.parse(await fs.readFile(config.workspacePackageJson, 'utf8'));
@@ -191,14 +191,14 @@ const build = async () => {
   distPackage.exports = {
     '.': {
       import: {
+        default: `./${config.distEntryFileName}.js`,
         types: `./${config.distEntryFileName}.d.ts`,
-        default: `./${config.distEntryFileName}.js`
       },
       require: {
+        default: `./cjs/${config.distEntryFileName}.js`,
         types: `./cjs/${config.distEntryFileName}.d.ts`,
-        default: `./cjs/${config.distEntryFileName}.js`
-      }
-    }
+      },
+    },
   };
 
   delete distPackage.files;
@@ -219,7 +219,7 @@ const build = async () => {
       } catch {
         // ignore if file doesn't exist
       }
-    })
+    }),
   );
 
   const stats = await getBuildStats();

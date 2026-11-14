@@ -1,4 +1,5 @@
 import { container } from './container.js';
+
 import type { InjectionToken } from './types.js';
 
 /**
@@ -12,9 +13,9 @@ import type { InjectionToken } from './types.js';
  * }
  */
 export function Inject<T>(token: InjectionToken<T>) {
-  return function (
+  return function injectDecorator(
     _target: ClassAccessorDecoratorTarget<any, T>,
-    context: ClassAccessorDecoratorContext<any, T>
+    context: ClassAccessorDecoratorContext<any, T>,
   ): ClassAccessorDecoratorResult<any, T> {
     if (context.kind !== 'accessor') {
       throw new TypeError('@Inject can only be applied to accessor properties.');
@@ -29,19 +30,19 @@ export function Inject<T>(token: InjectionToken<T>) {
         return container.get(token);
       },
 
-      set() {
-        throw new TypeError(`Cannot assign to injected dependency "${String(context.name)}".`);
-      },
-
       init(initialValue) {
         if (initialValue !== undefined) {
           throw new TypeError(
-            `Injected dependency "${String(context.name)}" cannot have a default value.`
+            `Injected dependency "${String(context.name)}" cannot have a default value.`,
           );
         }
 
         return initialValue;
-      }
+      },
+
+      set() {
+        throw new TypeError(`Cannot assign to injected dependency "${String(context.name)}".`);
+      },
     };
   };
 }

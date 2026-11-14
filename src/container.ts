@@ -3,10 +3,11 @@ import {
   DuplicateProviderError,
   FrozenContainerError,
   InvalidProviderError,
-  ProviderNotFoundError
+  ProviderNotFoundError,
 } from './errors.js';
-import type { InjectionToken, Provider } from './types.js';
 import { isClassProvider, isFactoryProvider, isValueProvider } from './utils.js';
+
+import type { InjectionToken, Provider } from './types.js';
 
 type RegisterOptions = {
   override?: boolean;
@@ -18,7 +19,9 @@ type RegisteredProvider<T = unknown> = {
 
 export class Container {
   private readonly providers = new Map<InjectionToken, RegisteredProvider>();
+
   private readonly instances = new Map<InjectionToken, unknown>();
+
   private readonly resolving = new Set<InjectionToken>();
 
   private frozen = false;
@@ -26,7 +29,7 @@ export class Container {
   register<T>(
     token: InjectionToken<T>,
     provider: Provider<T>,
-    options: RegisterOptions = {}
+    options: RegisterOptions = {},
   ): void {
     if (this.frozen) {
       throw new FrozenContainerError();
@@ -39,16 +42,17 @@ export class Container {
     let registered: RegisteredProvider<T>;
 
     if (isClassProvider(provider)) {
+      const ProviderClass = provider.useClass;
       registered = {
-        resolve: () => new provider.useClass()
+        resolve: () => new ProviderClass(),
       };
     } else if (isFactoryProvider(provider)) {
       registered = {
-        resolve: provider.useFactory
+        resolve: provider.useFactory,
       };
     } else if (isValueProvider(provider)) {
       registered = {
-        resolve: () => provider.useValue
+        resolve: () => provider.useValue,
       };
     } else {
       throw new InvalidProviderError(token);
