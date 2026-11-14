@@ -5,7 +5,7 @@ export {
   DuplicateProviderError,
   FrozenContainerError,
   InvalidProviderError,
-  ProviderNotFoundError
+  ProviderNotFoundError,
 } from './errors.js';
 export type {
   Constructor,
@@ -13,6 +13,6 @@ export type {
   InjectionToken,
   ClassProvider,
   Provider,
-  ValueProvider
+  ValueProvider,
 } from './types.js';
 export { isClassProvider, isFactoryProvider, isValueProvider } from './utils.js';

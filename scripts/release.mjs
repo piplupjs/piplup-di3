@@ -47,7 +47,7 @@ const workspaceRoot = getWorkspaceRoot();
 const config = {
   workspaceRoot,
   distDirectory: join(workspaceRoot, 'dist'),
-  distPackageJson: join(workspaceRoot, 'dist', 'package.json')
+  distPackageJson: join(workspaceRoot, 'dist', 'package.json'),
 };
 
 /**
@@ -64,7 +64,7 @@ const parseArgs = (argv) => {
     dryRun: false,
     ci: false,
     message: null,
-    remote: 'origin'
+    remote: 'origin',
   };
 
   for (let index = 0; index < argv.length; index++) {
@@ -153,7 +153,7 @@ const build = (dryRun) => {
   }
 
   exec('node', ['scripts/build.mjs'], {
-    cwd: config.workspaceRoot
+    cwd: config.workspaceRoot,
   });
 };
 
@@ -239,7 +239,7 @@ const publish = (dryRun) => {
   }
 
   exec('npm', ['publish', '--access', 'public'], {
-    cwd: config.distDirectory
+    cwd: config.distDirectory,
   });
 };
 

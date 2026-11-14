@@ -5,7 +5,7 @@ import {
   DuplicateProviderError,
   FrozenContainerError,
   InvalidProviderError,
-  ProviderNotFoundError
+  ProviderNotFoundError,
 } from './errors.js';
 
 describe('Container', () => {
@@ -96,12 +96,12 @@ describe('Container', () => {
       container.register('A', {
         useFactory: () => {
           return container.get('B');
-        }
+        },
       });
       container.register('B', {
         useFactory: () => {
           return container.get('A');
-        }
+        },
       });
 
       expect(() => container.get('A')).toThrow(CircularDependencyError);
@@ -112,7 +112,7 @@ describe('Container', () => {
     it('should dispose components with Symbol.dispose', () => {
       const disposeSpy = vi.fn();
       const disposable = {
-        [Symbol.dispose]: disposeSpy
+        [Symbol.dispose]: disposeSpy,
       };
       container.register('disposable', { useValue: disposable });
       container.get('disposable'); // Instantialize/cache
@@ -124,7 +124,7 @@ describe('Container', () => {
     it('should dispose components with dispose() function', () => {
       const disposeSpy = vi.fn();
       const disposable = {
-        dispose: disposeSpy
+        dispose: disposeSpy,
       };
       container.register('disposable', { useValue: disposable });
       container.get('disposable');

@@ -40,7 +40,7 @@ export const exec = (cmd, args, { cwd = workspaceRoot, silent = false } = {}) =>
   const result = spawnSync(cmd, args, {
     cwd,
     stdio: silent ? 'pipe' : 'inherit',
-    encoding: 'utf8'
+    encoding: 'utf8',
   });
 
   if (result.status !== 0) {

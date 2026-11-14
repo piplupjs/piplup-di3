@@ -35,7 +35,7 @@ describe('Dependency Injection E2E Flow', () => {
           id,
           name: 'John Doe',
           dbInfo: this.db.query(`SELECT * FROM users WHERE id = ${id}`),
-          portUsed: this.config.port
+          portUsed: this.config.port,
         };
       }
     }
@@ -52,7 +52,7 @@ describe('Dependency Injection E2E Flow', () => {
     // 2. Register providers in the container
     const configValue: AppConfig = {
       dbUrl: 'mongodb://localhost:27017/prod',
-      port: 8080
+      port: 8080,
     };
 
     container.register(CONFIG_TOKEN, { useValue: configValue });
@@ -61,7 +61,7 @@ describe('Dependency Injection E2E Flow', () => {
       useFactory: () => {
         const config = container.get<AppConfig>(CONFIG_TOKEN);
         return new DatabaseService(config.dbUrl);
-      }
+      },
     });
 
     container.register(UserRepository, { useClass: UserRepository });
@@ -79,7 +79,7 @@ describe('Dependency Injection E2E Flow', () => {
       id: '42',
       name: 'John Doe',
       dbInfo: 'Result of "SELECT * FROM users WHERE id = 42" from mongodb://localhost:27017/prod',
-      portUsed: 8080
+      portUsed: 8080,
     });
 
     // Verify singletons

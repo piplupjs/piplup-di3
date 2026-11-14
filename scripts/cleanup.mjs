@@ -13,7 +13,7 @@ async function clean() {
   const matches = await fg(patterns, {
     onlyFiles: false,
     dot: true,
-    ignore
+    ignore,
   });
 
   for (const path of matches) {
